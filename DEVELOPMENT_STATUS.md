@@ -51,6 +51,9 @@
 - Complete JSON export and restore flow.
 - Local-first offline behavior with versioned storage key.
 - Build, test, lint, and live browser verification completed.
+- IndexedDB-first persistence adapter with localStorage/memory fallback.
+- Explicit notification service and opt-in browser permission flow.
+- Local/offline sync adapter status boundary without data transmission.
 
 ## Known limitations
 
