@@ -1,0 +1,17 @@
+{
+  "name": "Pendulum — All In One Timer",
+  "short_name": "Pendulum",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#11111d",
+  "theme_color": "#11111d",
+  "description": "A calm, local-first productivity workspace.",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

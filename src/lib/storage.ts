@@ -1,4 +1,5 @@
 export const STORAGE_KEY = 'pendulum-state-v2'
+export const LEGACY_STORAGE_KEYS = ['pendulum-state', 'pendulum-state-v1'] as const
 export const DATABASE_NAME = 'pendulum-storage'
 export const DATABASE_VERSION = 1
 
@@ -41,8 +42,18 @@ export async function readPersistedState<T>(fallback: T): Promise<StorageResult<
   }
   if (canUseLocalStorage()) {
     try {
-      const raw = localStorage.getItem(STORAGE_KEY)
-      if (raw) return { value: JSON.parse(raw) as T, backend: 'localstorage' }
+      const current = localStorage.getItem(STORAGE_KEY)
+      const legacyKey = LEGACY_STORAGE_KEYS.find((key) => localStorage.getItem(key) !== null)
+      const raw = current ?? (legacyKey ? localStorage.getItem(legacyKey) : null)
+      if (raw) {
+        const value = JSON.parse(raw) as T
+        if (!current) {
+          localStorage.setItem(STORAGE_KEY, raw)
+          if (legacyKey) localStorage.removeItem(legacyKey)
+        }
+        if (canUseIndexedDb()) return { value, backend: await writePersistedState(value) }
+        return { value, backend: 'localstorage' }
+      }
     } catch {
       // Fall through to the memory adapter.
     }
@@ -78,15 +89,30 @@ export async function writePersistedState<T>(value: T): Promise<StorageBackend> 
 }
 
 export async function migrateLegacyState<T>(fallback: T): Promise<StorageResult<T>> {
-  const result = await readPersistedState(fallback)
-  if (result.backend !== 'memory') return result
-  if (!canUseLocalStorage()) return result
-  try {
-    const legacy = localStorage.getItem(STORAGE_KEY)
-    if (!legacy) return result
-    const value = JSON.parse(legacy) as T
-    return { value, backend: 'localstorage' }
-  } catch {
-    return result
+  return readPersistedState(fallback)
+}
+
+export async function clearPersistedState(): Promise<void> {
+  if (canUseIndexedDb()) {
+    try {
+      const database = await openDatabase()
+      await new Promise<void>((resolve, reject) => {
+        const transaction = database.transaction('state', 'readwrite')
+        transaction.objectStore('state').delete(STORAGE_KEY)
+        transaction.onerror = () => reject(transaction.error)
+        transaction.oncomplete = () => resolve()
+      })
+      database.close()
+    } catch {
+      // Continue clearing local fallbacks.
+    }
+  }
+  if (canUseLocalStorage()) {
+    try {
+      localStorage.removeItem(STORAGE_KEY)
+      LEGACY_STORAGE_KEYS.forEach((key) => localStorage.removeItem(key))
+    } catch {
+      // Storage may be unavailable or read-only; the in-memory state still resets.
+    }
   }
 }
