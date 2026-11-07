@@ -14,10 +14,16 @@ Pendulum is a free, local-first productivity workspace for focused work, thought
 - Optional AI provider/model configuration that never blocks core workflows.
 - XP and achievement surface with non-punitive progress.
 - Local JSON export/restore and quiet-hours settings.
+- Installable PWA shell with offline app-shell caching; dynamic data remains in browser storage.
 
 ## Honest integration boundaries
 
-Pendulum does not pretend that browser-only code can securely provide cloud sync, OAuth calendar/music integrations, native notifications, encrypted accounts, or operating-system website blocking. Those capabilities have explicit adapter boundaries in the UI and are documented for future IndexedDB, backend, and desktop implementations.
+Pendulum does not pretend that browser-only code can securely provide cloud sync, OAuth calendar/music integrations, native notifications, encrypted accounts, AI provider calls, licensed ambient audio, or operating-system website blocking. The current implementation provides:
+
+- **Local persistence:** IndexedDB with localStorage and memory fallbacks, including migration from `pendulum-state` and `pendulum-state-v1`.
+- **Offline installation:** a versioned service worker caches the app shell only; it does not sync data or make a backend available.
+- **Notifications:** optional browser notifications after explicit permission; OS scheduling is not implemented.
+- **Integrations:** cloud collaboration, calendar/music OAuth, remote AI providers, licensed audio, and OS/browser blocking require separate backend, OAuth credentials, licensed assets, extension permissions, or desktop code. UI labels such as “adapter” and “not configured” are intentional and are not claims of connectivity.
 
 ## Development
 
