@@ -2,75 +2,40 @@ import { useEffect, useRef, useState } from 'react'
 import type { ChangeEvent } from 'react'
 import { motion } from 'framer-motion'
 import {
-  Archive, BarChart3, BookOpen, CalendarDays, Check, ChevronRight, Circle, Clock3, CloudRain,
+  Archive, BarChart3, Bell, BookOpen, CalendarDays, Check, ChevronRight, Circle, Clock3, CloudRain,
   Download, Flame, Goal, LayoutDashboard, ListTodo, Moon, Pause,
   Play, Plus, RotateCcw, Search, Settings2, Sparkles, Sun, Target, Trash2, Trophy,
   Upload, Volume2, X, Zap,
 } from 'lucide-react'
+import { getNotificationPermission, notifyTimerComplete, requestNotificationPermission } from './lib/notifications'
+import { createStorageService, getDefaultState, loadInitialState } from './lib/storage'
+import { getSyncAdapter } from './lib/sync'
+import type { Id, Mode, Note, PersistedState, Project, Task, StudyCard, Session } from './lib/types'
 import './App.css'
 
-type Theme = 'dark' | 'light'
-type Mode = 'focus' | 'short' | 'long' | 'stopwatch' | 'countdown'
 type View = 'home' | 'tasks' | 'planner' | 'calendar' | 'goals' | 'habits' | 'analytics' | 'study' | 'notes' | 'ambient' | 'ai' | 'settings'
-type Id = string
-
-type Project = { id: Id; name: string; color: string }
-type Task = { id: Id; title: string; projectId: Id; done: boolean; priority: 'low' | 'medium' | 'high'; due?: string; minutes: number }
-type EventItem = { id: Id; title: string; date: string; time: string; minutes: number; kind: 'focus' | 'deadline' | 'class' }
-type Habit = { id: Id; name: string; cadence: 'daily' | 'weekly'; days: string[]; completions: string[] }
-type Goal = { id: Id; title: string; target: number; current: number; unit: string; due: string }
-type Note = { id: Id; title: string; body: string; tags: string[]; pinned: boolean; updatedAt: string }
-type StudyCard = { id: Id; front: string; back: string; due: string; reviews: number }
-type Session = { id: Id; startedAt: string; endedAt: string; duration: number; mode: Mode; completed: boolean }
-type PersistedState = {
-  tasks: Task[]; projects: Project[]; events: EventItem[]; habits: Habit[]; goals: Goal[]; notes: Note[]
-  studyCards: StudyCard[]; sessions: Session[]; theme: Theme; accent: string; mode: Mode
-  remaining: number; timerEndsAt?: number; isRunning: boolean; completedFocus: number
-  ambient: 'rain' | 'forest' | 'cafe' | 'night'; volume: number; soundOn: boolean; xp: number
-  showCompleted: boolean; aiProvider: string; aiModel: string; quietHours: boolean
-}
-
-const STORAGE_KEY = 'pendulum-state-v2'
 const durations: Record<Mode, number> = { focus: 25 * 60, short: 5 * 60, long: 15 * 60, countdown: 10 * 60, stopwatch: 0 }
+const syncAdapter = getSyncAdapter()
 const uid = () => crypto.randomUUID()
 const today = () => new Date().toISOString().slice(0, 10)
 const formatTime = (seconds: number) => {
   const safe = Math.max(0, Math.floor(seconds))
   return `${Math.floor(safe / 60).toString().padStart(2, '0')}:${(safe % 60).toString().padStart(2, '0')}`
 }
-const defaultProjects: Project[] = [{ id: 'design', name: 'Design system', color: '#b57cff' }, { id: 'personal', name: 'Personal', color: '#6ed6c4' }]
-const defaultTasks: Task[] = [
-  { id: '1', title: 'Shape the next meaningful thing', projectId: 'design', done: false, priority: 'high', minutes: 45 },
-  { id: '2', title: 'Clear the small wins from today', projectId: 'personal', done: false, priority: 'medium', due: today(), minutes: 25 },
-  { id: '3', title: 'Write down one idea worth keeping', projectId: 'design', done: true, priority: 'low', minutes: 15 },
-]
-const getDefaultState = (): PersistedState => ({
-  tasks: defaultTasks, projects: defaultProjects, events: [], habits: [{ id: 'h1', name: 'Morning pages', cadence: 'daily', days: [], completions: [] }],
-  goals: [{ id: 'g1', title: 'Build a sustainable focus practice', target: 20, current: 7, unit: 'sessions', due: '2026-12-01' }],
-  notes: [{ id: 'n1', title: 'Welcome to Pendulum', body: 'Use this space for ideas, meeting notes, and daily reflection.', tags: ['getting-started'], pinned: true, updatedAt: new Date().toISOString() }],
-  studyCards: [{ id: 'c1', front: 'What makes a habit sustainable?', back: 'A clear cue, a small action, and a meaningful reward.', due: today(), reviews: 0 }],
-  sessions: [], theme: 'dark', accent: '#a66bff', mode: 'focus', remaining: durations.focus, isRunning: false, completedFocus: 0,
-  ambient: 'rain', volume: 35, soundOn: false, xp: 120, showCompleted: true, aiProvider: 'Not configured', aiModel: 'Local / optional', quietHours: false,
-})
-const getInitialState = (): PersistedState => {
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY)
-    if (saved) return { ...getDefaultState(), ...JSON.parse(saved) }
-  } catch { /* local-first app recovers with defaults if storage is unavailable */ }
-  return getDefaultState()
-}
-
 function App() {
-  const [state, setState] = useState<PersistedState>(getInitialState)
+  const storage = useRef(createStorageService(getDefaultState())).current
+  const [state, setState] = useState<PersistedState>(() => loadInitialState(getDefaultState()))
   const [view, setView] = useState<View>('home')
   const [showLanding, setShowLanding] = useState(true)
   const [query, setQuery] = useState('')
   const [draft, setDraft] = useState('')
   const [selectedNote, setSelectedNote] = useState<Id | null>(null)
   const [toast, setToast] = useState('')
+  const [notificationPermission, setNotificationPermission] = useState(getNotificationPermission)
   const importRef = useRef<HTMLInputElement>(null)
 
-  useEffect(() => localStorage.setItem(STORAGE_KEY, JSON.stringify(state)), [state])
+  useEffect(() => { void storage.load().then((loaded) => setState(loaded)) }, [storage])
+  useEffect(() => { void storage.save(state) }, [state, storage])
   useEffect(() => {
     if (!state.isRunning) return
     const interval = window.setInterval(() => {
@@ -81,6 +46,7 @@ function App() {
           const startedAt = new Date((current.timerEndsAt ?? now) - durations[current.mode] * 1000).toISOString()
           const endedAt = new Date().toISOString()
           const finished: Session = { id: uid(), startedAt, endedAt, duration: durations[current.mode], mode: current.mode, completed: true }
+          notifyTimerComplete(current.notifyOnTimerComplete)
           return { ...current, remaining: durations[current.mode], timerEndsAt: undefined, isRunning: false, completedFocus: current.mode === 'focus' ? current.completedFocus + 1 : current.completedFocus, xp: current.xp + (current.mode === 'focus' ? 25 : 5), sessions: [...current.sessions, finished] }
         }
         return { ...current, remaining }
@@ -179,7 +145,7 @@ function App() {
         {view === 'notes' && <Notes state={state} currentNote={currentNote} selectedNote={selectedNote} setSelectedNote={setSelectedNote} addNote={addNote} updateNote={updateNote} query={query} />}
         {view === 'ambient' && <Ambient state={state} update={update} />}
         {view === 'ai' && <Assistant state={state} addTask={addTask} update={update} />}
-        {view === 'settings' && <Settings state={state} update={update} exportData={exportData} importData={() => importRef.current?.click()} />}
+        {view === 'settings' && <Settings state={state} update={update} exportData={exportData} importData={() => importRef.current?.click()} notificationPermission={notificationPermission} requestNotifications={async () => { const permission = await requestNotificationPermission(); setNotificationPermission(permission) }} storageStatus={storage.status} />}
         <input ref={importRef} className="hidden-input" type="file" accept="application/json" onChange={importData} />
         {toast && <div className="toast"><Check size={15} />{toast}</div>}
       </main>
@@ -217,6 +183,9 @@ const dueCardsCount = (cards: StudyCard[]) => cards.filter((card) => card.due <=
 function Notes({ state, currentNote, selectedNote, setSelectedNote, addNote, updateNote, query }: { state: PersistedState; currentNote?: Note; selectedNote: Id | null; setSelectedNote: (id: Id) => void; addNote: () => void; updateNote: (patch: Partial<Note>) => void; query: string }) { return <section className="notes-layout panel"><aside className="notes-list"><div className="panel-heading"><h3>Notes</h3><button className="icon-button" onClick={addNote} aria-label="Add note"><Plus size={15} /></button></div>{state.notes.filter((note) => note.title.toLowerCase().includes(query.toLowerCase())).map((note) => <button className={`note-row ${selectedNote === note.id ? 'selected' : ''}`} key={note.id} onClick={() => setSelectedNote(note.id)}><strong>{note.title}</strong><small>{new Date(note.updatedAt).toLocaleDateString()}</small></button>)}</aside><div className="note-editor">{currentNote ? <><input className="note-title-input" value={currentNote.title} onChange={(event) => updateNote({ title: event.target.value })} /><textarea value={currentNote.body} onChange={(event) => updateNote({ body: event.target.value })} placeholder="Start writing..." /><div className="note-footer"><span>{currentNote.body.split(/\s+/).filter(Boolean).length} words · autosaved locally</span><button className="text-button" onClick={() => updateNote({ pinned: !currentNote.pinned })}>{currentNote.pinned ? 'Unpin' : 'Pin note'}</button></div></> : <div className="empty-state">Create a note to start thinking.</div>}</div></section> }
 function Ambient({ state, update }: { state: PersistedState; update: (patch: Partial<PersistedState>) => void }) { const presets = [{ id: 'rain', label: 'Rainy window', color: '#4d79a5', icon: CloudRain }, { id: 'forest', label: 'Deep forest', color: '#3e806d', icon: Sparkles }, { id: 'cafe', label: 'Quiet café', color: '#ad735d', icon: Volume2 }, { id: 'night', label: 'Night sky', color: '#3c3b85', icon: Moon }] as const; return <section className="ambient-view"><div className="ambient-stage panel" style={{ background: `radial-gradient(circle at 70% 20%, ${presets.find((item) => item.id === state.ambient)?.color}, transparent 45%), #11111d` }}><div><span className="overline">Ambient workspace</span><h3>Let the room become quieter.</h3><p>Visual presets are local and audio controls are ready for legally licensed sound assets.</p></div><div className="ambient-clock">{new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div></div><div className="ambient-controls panel"><div className="preset-grid">{presets.map(({ id, label, color, icon: Icon }) => <button className={state.ambient === id ? 'selected' : ''} key={id} onClick={() => update({ ambient: id })} style={{ '--preset': color } as React.CSSProperties}><Icon size={17} /><span>{label}</span></button>)}</div><div className="volume-row"><button className={`sound-toggle ${state.soundOn ? 'selected' : ''}`} onClick={() => update({ soundOn: !state.soundOn })}><Volume2 size={16} /> {state.soundOn ? 'Sound on' : 'Sound off'}</button><input type="range" min="0" max="100" value={state.volume} onChange={(event) => update({ volume: Number(event.target.value) })} /><span>{state.volume}%</span></div></div></section> }
 function Assistant({ state, addTask, update }: { state: PersistedState; addTask: (title: string) => void; update: (patch: Partial<PersistedState>) => void }) { const [prompt, setPrompt] = useState(''); const suggestions = ['Make a realistic plan for my open tasks', 'Break my highest-priority task into steps', 'Create a gentle study routine']; return <section className="assistant-view"><div className="assistant-card panel"><Sparkles size={22} /><span className="overline">Optional intelligence</span><h3>A co-pilot that never gets in the way.</h3><p className="muted-copy">Pendulum works without AI. Configure a provider only when you choose to, and keep requests under your control.</p><div className="assistant-input"><input value={prompt} onChange={(event) => setPrompt(event.target.value)} placeholder="Ask for a plan or breakdown..." /><button onClick={() => { if (prompt.trim()) { addTask(`AI idea: ${prompt.trim()}`); setPrompt('') } }}>Create task <Plus size={14} /></button></div><div className="suggestion-row">{suggestions.map((item) => <button key={item} onClick={() => setPrompt(item)}>{item}</button>)}</div></div><div className="panel module-card"><span className="overline">Privacy boundary</span><h3>Provider configuration</h3><p className="muted-copy">No API key is bundled in the client. A future backend or local model adapter can use these preferences.</p><label className="field-label">Provider</label><select value={state.aiProvider} onChange={(event) => update({ aiProvider: event.target.value })}><option>Not configured</option><option>Local model</option><option>OpenAI-compatible backend</option><option>Anthropic-compatible backend</option></select><label className="field-label">Model label</label><input className="settings-input" value={state.aiModel} onChange={(event) => update({ aiModel: event.target.value })} /></div></section> }
-function Settings({ state, update, exportData, importData }: { state: PersistedState; update: (patch: Partial<PersistedState>) => void; exportData: () => void; importData: () => void }) { return <section className="settings-view"><div className="panel settings-card"><span className="overline">Appearance</span><h3>Make the workspace yours.</h3><div className="settings-row"><span>Accent colour</span><div className="swatches">{['#a66bff', '#ff7d9d', '#4cc9a5', '#55a8ff', '#ff9e67'].map((color) => <button className={state.accent === color ? 'selected' : ''} key={color} style={{ background: color }} onClick={() => update({ accent: color })} aria-label={`Use ${color}`} />)}</div></div><div className="settings-row"><span>Quiet hours</span><button className={`toggle ${state.quietHours ? 'on' : ''}`} onClick={() => update({ quietHours: !state.quietHours })}>{state.quietHours ? 'On' : 'Off'}</button></div></div><div className="panel settings-card"><span className="overline">Data & privacy</span><h3>Your data belongs to you.</h3><p className="muted-copy">Pendulum is local-first. Export a complete JSON backup or restore one on another device.</p><div className="settings-actions"><button className="secondary-button" onClick={exportData}><Download size={15} /> Export all data</button><button className="secondary-button" onClick={importData}><Upload size={15} /> Restore backup</button></div></div><div className="panel settings-card"><span className="overline">Wellbeing</span><h3>Progress without pressure.</h3><p className="muted-copy">Gamification is optional and intentionally gentle. You have {state.xp} XP and no streak penalties.</p><div className="achievement"><Trophy size={17} /><span>Focus foundation</span><strong>{state.completedFocus >= 1 ? 'Unlocked' : 'In progress'}</strong></div></div></section> }
+function Settings({ state, update, exportData, importData, notificationPermission, requestNotifications, storageStatus }: { state: PersistedState; update: (patch: Partial<PersistedState>) => void; exportData: () => void; importData: () => void; notificationPermission: string; requestNotifications: () => Promise<void>; storageStatus: string }) {
+  const notificationLabel = notificationPermission === 'granted' ? 'Allowed' : notificationPermission === 'denied' ? 'Blocked' : notificationPermission === 'unsupported' ? 'Unavailable in this browser' : 'Not requested'
+  return <section className="settings-view"><div className="panel settings-card"><span className="overline">Appearance</span><h3>Make the workspace yours.</h3><div className="settings-row"><span>Accent colour</span><div className="swatches">{['#a66bff', '#ff7d9d', '#4cc9a5', '#55a8ff', '#ff9e67'].map((color) => <button className={state.accent === color ? 'selected' : ''} key={color} style={{ background: color }} onClick={() => update({ accent: color })} aria-label={`Use ${color}`} />)}</div></div><div className="settings-row"><span>Quiet hours</span><button className={`toggle ${state.quietHours ? 'on' : ''}`} onClick={() => update({ quietHours: !state.quietHours })}>{state.quietHours ? 'On' : 'Off'}</button></div></div><div className="panel settings-card"><span className="overline">Notifications</span><h3>Choose when Pendulum speaks.</h3><p className="muted-copy">Permission is never requested automatically. Timer alerts only run after you allow them.</p><div className="settings-row"><span>Permission status</span><strong>{notificationLabel}</strong></div><div className="settings-row"><span>Notify when a timer completes</span><button className={`toggle ${state.notifyOnTimerComplete ? 'on' : ''}`} onClick={() => update({ notifyOnTimerComplete: !state.notifyOnTimerComplete })}>{state.notifyOnTimerComplete ? 'On' : 'Off'}</button></div><button className="secondary-button" onClick={() => void requestNotifications()} disabled={notificationPermission === 'granted' || notificationPermission === 'unsupported'}><Bell size={15} /> Request permission</button></div><div className="panel settings-card"><span className="overline">Data & privacy</span><h3>Your data belongs to you.</h3><p className="muted-copy">Pendulum is local-first. Export a complete JSON backup or restore one on another device.</p><div className="settings-row"><span>Primary storage</span><strong>{storageStatus === 'indexeddb' ? 'IndexedDB' : storageStatus === 'localStorage' ? 'Local storage fallback' : 'Unavailable'}</strong></div><div className="settings-actions"><button className="secondary-button" onClick={exportData}><Download size={15} /> Export all data</button><button className="secondary-button" onClick={importData}><Upload size={15} /> Restore backup</button></div></div><div className="panel settings-card"><span className="overline">Sync boundary</span><h3>Local and offline by default.</h3><p className="muted-copy">{syncAdapter.description}</p><div className="settings-row"><span>Sync status</span><strong>{syncAdapter.status === 'not-configured' ? 'Not configured' : syncAdapter.status}</strong></div></div><div className="panel settings-card"><span className="overline">Wellbeing</span><h3>Progress without pressure.</h3><p className="muted-copy">Gamification is optional and intentionally gentle. You have {state.xp} XP and no streak penalties.</p><div className="achievement"><Trophy size={17} /><span>Focus foundation</span><strong>{state.completedFocus >= 1 ? 'Unlocked' : 'In progress'}</strong></div></div></section>
+}
 
 export default App

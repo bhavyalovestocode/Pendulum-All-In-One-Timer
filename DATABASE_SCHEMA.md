@@ -1,6 +1,6 @@
 # Data schema
 
-Milestone 1 uses browser local storage and stores one JSON document under `pendulum-state-v1`.
+The current browser schema is a versioned JSON document stored in an IndexedDB object store named `state` under the `current` record. The existing `pendulum-state-v2` localStorage document is accepted as a migration source and remains the fallback store.
 
 ```ts
 type PersistedState = {
@@ -8,11 +8,12 @@ type PersistedState = {
   projects: { id: string; name: string; color: string }[]
   theme: 'dark' | 'light'
   accent: string
-  mode: 'focus' | 'short' | 'long'
+  mode: 'focus' | 'short' | 'long' | 'stopwatch' | 'countdown'
   remaining: number
   isRunning: boolean
   completedFocus: number
+  notifyOnTimerComplete: boolean
 }
 ```
 
-The schema is deliberately small and versioned by the storage key. A future migration layer can upgrade this document to IndexedDB or a relational SQLite model without requiring view components to know the storage implementation.
+The persistence envelope is `{ version: 3, state: PersistedState }`. Loading merges a legacy or partial document with current defaults, so newly introduced fields are safe. JSON export/restore remains the user-controlled backup path; no remote database or sync transport is configured.

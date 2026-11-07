@@ -52,12 +52,22 @@
 - Local-first offline behavior with versioned storage key.
 - Build, test, lint, and live browser verification completed.
 
+### Milestone 9 — Local infrastructure
+
+- Typed domain and persistence helpers extracted from `App.tsx`.
+- Versioned IndexedDB persistence with migration from `pendulum-state-v2` and localStorage fallback.
+- Guarded, opt-in browser notification service wired to timer completion.
+- Explicit sync adapter/status boundary with no transmission or simulated connection.
+- Settings exposes storage, notification permission, sync status, and JSON backup controls.
+- Storage migration/fallback and notification guard tests added.
+
 ## Known limitations
 
-- Browser notifications, native desktop packaging, cloud synchronization, conflict resolution, encrypted accounts, and OAuth provider integrations still require backend/desktop adapters.
+- Native desktop packaging, cloud synchronization, conflict resolution, encrypted accounts, and OAuth provider integrations still require backend/desktop adapters.
+- IndexedDB is currently a single local workspace record; multi-device sync and conflict resolution are intentionally not implemented.
 - Ambient audio currently provides controls and scene persistence; legally distributable audio assets need to be supplied or hosted before playback can be enabled.
 - Charts use the measured session history where labeled; the compact overview pulse bars remain decorative context.
 
 ## Next milestone
 
-Extract domain modules and storage adapters, then add IndexedDB migrations, browser notifications, and optional sync without coupling those concerns to the app shell.
+Implement an explicit remote sync adapter only when a backend/authentication design is approved; preserve the local/offline behavior when it is unavailable.
