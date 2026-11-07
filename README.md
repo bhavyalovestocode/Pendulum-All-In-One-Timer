@@ -1,18 +1,23 @@
 # Pendulum — All In One Timer
 
-Pendulum is a free, local-first productivity workspace for focused work, thoughtful planning, and visible progress. It combines an animated focus timer, lightweight tasks, projects, and a quiet reflection surface in one responsive web app.
+Pendulum is a free, local-first productivity workspace for focused work, thoughtful planning, learning, and visible progress. It combines an animated focus timer with tasks, planning, goals, habits, analytics, notes, study cards, ambient scenes, optional AI configuration, and privacy tools.
 
-## Milestone 1
+## What is included
 
-- Original animated landing page and hero experience.
-- Responsive workspace shell with overview, tasks, and reflection views.
-- Focus, short-break, and long-break timer modes.
-- Timer controls with persisted local session state.
-- Persistent tasks and projects backed by browser local storage.
-- Dark/light theme switching and an extensible accent token.
-- UI coverage for landing, timer, and task interactions.
+- Animated landing page and responsive application shell.
+- Absolute-time focus timer with focus, break, countdown, and stopwatch modes.
+- Persistent tasks with priorities, project association, search, completion, and task-time estimates.
+- Planner, two-week calendar, goals, habits, and measured focus analytics.
+- Notes with autosaved editing, pinning, search, and word counts.
+- Study dashboard with flashcard review tracking and due-card calculations.
+- Ambient scene presets, volume controls, and saved workspace preferences.
+- Optional AI provider/model configuration that never blocks core workflows.
+- XP and achievement surface with non-punitive progress.
+- Local JSON export/restore and quiet-hours settings.
 
-Later milestones will add planning, habits, analytics, ambient audio, notes, student workflows, optional AI providers, and sync without introducing paid feature gates.
+## Honest integration boundaries
+
+Pendulum does not pretend that browser-only code can securely provide cloud sync, OAuth calendar/music integrations, native notifications, encrypted accounts, or operating-system website blocking. Those capabilities have explicit adapter boundaries in the UI and are documented for future IndexedDB, backend, and desktop implementations.
 
 ## Development
 
@@ -29,4 +34,4 @@ npm run test
 npm run lint
 ```
 
-Core data is stored under the `pendulum-state-v1` local-storage key. Clearing browser storage resets the local workspace to the starter state.
+Core data is stored under the versioned `pendulum-state-v2` local-storage key. Use **Settings → Export all data** for a complete JSON backup; **Restore backup** imports it on another device.

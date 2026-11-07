@@ -2,28 +2,62 @@
 
 ## Completed
 
-- Milestone 1 project foundation with React, TypeScript, Vite, Vitest, and an original visual system.
-- Landing page with animated ambient gradients, responsive layout, CTA, and product positioning.
-- Responsive workspace shell with overview, tasks, and reflection views.
-- Focus timer with three modes, pause/start/reset controls, progress ring, and persisted state.
-- Local task and project creation, completion, deletion, project counts, and persistence.
-- Dark/light theme toggle and reusable accent token.
-- Initial UI tests and build verification.
+### Milestone 1 — Foundation
 
-## Current milestone
+- React, TypeScript, Vite, Vitest, local-first persistence, original visual system, and responsive shell.
+- Animated landing page and hero experience.
+- Focus, short-break, long-break, countdown, and stopwatch modes with absolute timestamp timer progression.
+- Persistent tasks and projects with completion, priorities, search, and task/project views.
 
-Milestone 1 — Foundation and polished landing experience.
+### Milestone 2 — Productivity core
 
-## Pending
+- Configurable navigation across dashboard, tasks, planner, calendar, goals, habits, analytics, study, notes, ambient, AI, and settings.
+- Daily planning surface with time blocks and quick scheduling.
+- Two-week calendar preview with real local events.
+- Goals with progress logging.
+- Habits with daily completion and history markers.
+- Local reminders/preferences boundary and quiet-hours setting.
 
-Planner and calendar, habits, analytics, ambient workspace, notes, student suite, optional AI, collaboration, distraction management, cloud sync, and desktop packaging.
+### Milestone 3 — Analytics
+
+- Measured focus minutes from completed sessions.
+- Session count, average duration, task completion totals, distribution chart, and session history.
+- Analytics explicitly distinguish measured data from illustrative visual scaffolding.
+
+### Milestone 4 — Ambient workspace
+
+- Local ambient presets, visual scene switching, clock stage, volume control, and soundscape toggle boundary.
+- Provider/licensing restrictions are not hidden; external audio assets are intentionally not fabricated.
+
+### Milestone 5 — Advanced productivity and knowledge
+
+- Notes with autosaved title/body editing, pinning, search, word counts, and local persistence.
+- Study dashboard with flashcard review tracking and due-card calculations.
+- Goal and task structures provide extension points for kanban, dependencies, and scheduling.
+
+### Milestone 6 — Optional intelligence
+
+- Provider-independent AI settings surface with local/compatible backend choices.
+- Natural-language prompts can create local tasks without requiring an AI provider.
+- No API keys are shipped in frontend code and core functionality remains independent of AI.
+
+### Milestone 7 — Ecosystem boundaries
+
+- Gamification XP and achievement surface with wellbeing-safe, non-punitive progress.
+- Collaboration, calendar providers, music providers, and desktop integrations are represented as explicit future adapter boundaries rather than fake integrations.
+
+### Milestone 8 — Privacy and release quality
+
+- Complete JSON export and restore flow.
+- Local-first offline behavior with versioned storage key.
+- Build, test, lint, and live browser verification completed.
 
 ## Known limitations
 
-- Persistence is browser-local only; sync and migrations are intentionally deferred.
-- Notifications and background timer notifications are deferred to the desktop/notification milestone.
-- The starter workspace uses a small set of seeded tasks and projects for first-run orientation.
+- Browser notifications, native desktop packaging, cloud synchronization, conflict resolution, encrypted accounts, and OAuth provider integrations still require backend/desktop adapters.
+- Ambient audio currently provides controls and scene persistence; legally distributable audio assets need to be supplied or hosted before playback can be enabled.
+- Charts use the measured session history where labeled; the compact overview pulse bars remain decorative context.
 
 ## Next milestone
 
-Connect tasks, focus sessions, and calendar planning through a persistent daily/weekly planner.
+Extract domain modules and storage adapters, then add IndexedDB migrations, browser notifications, and optional sync without coupling those concerns to the app shell.
