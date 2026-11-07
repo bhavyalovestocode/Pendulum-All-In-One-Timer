@@ -12,3 +12,9 @@ Pendulum is currently a client-only React/TypeScript application. The UI is spli
 ## Extension direction
 
 Future modules should add typed domain slices and storage adapters rather than coupling data access to presentational components. The same shell navigation can host planner, analytics, ambient, notes, and student modules without changing the timer contract.
+
+## Infrastructure adapters
+
+`src/lib/storage.ts` provides a versioned persistence boundary. It prefers IndexedDB, creates the Pendulum object store on upgrade, reads existing `pendulum-state-v2` JSON data, and falls back to localStorage or memory when browser storage is unavailable. The current UI retains its synchronous localStorage bootstrap for fast first paint while the adapter is available for the next async hydration step.
+
+`src/lib/notifications.ts` is an explicit browser notification boundary. Permission is requested only from Settings, and timer completion is a guarded best-effort notification. `src/lib/sync.ts` defines the future sync contract while reporting local/offline status without transmitting user data.

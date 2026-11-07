@@ -35,3 +35,5 @@ npm run lint
 ```
 
 Core data is stored under the versioned `pendulum-state-v2` local-storage key. Use **Settings → Export all data** for a complete JSON backup; **Restore backup** imports it on another device.
+
+The storage service prefers IndexedDB and falls back safely to localStorage or memory. Browser notifications are optional, requested only from Settings, and guarded when unsupported. Cloud sync is intentionally not configured: the app reports local/offline status and never transmits data without a future explicit adapter.
