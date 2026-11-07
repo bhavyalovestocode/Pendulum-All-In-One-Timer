@@ -31,4 +31,13 @@ describe('Pendulum foundation', () => {
     fireEvent.click(screen.getAllByRole('button', { name: /complete task/i }).at(-1)!)
     expect(screen.getByText('Plan the launch')).toHaveClass('task-title')
   })
+
+  it('resets persisted data from settings', async () => {
+    localStorage.setItem('pendulum-state-v2', JSON.stringify({ tasks: [] }))
+    render(<App />)
+    fireEvent.click(screen.getByRole('button', { name: /enter your workspace/i }))
+    fireEvent.click(screen.getByRole('button', { name: /settings/i }))
+    fireEvent.click(screen.getByRole('button', { name: /reset local data/i }))
+    expect(await screen.findByText('Local data reset')).toBeInTheDocument()
+  })
 })
