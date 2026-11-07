@@ -32,19 +32,22 @@
 ### Milestone 5 — Advanced productivity and knowledge
 
 - Notes with autosaved title/body editing, pinning, search, word counts, and local persistence.
-- Study dashboard with flashcard review tracking and due-card calculations.
-- Goal and task structures provide extension points for kanban, dependencies, and scheduling.
+- Study dashboard with flashcard review tracking, due-card calculations, and deterministic interval progression.
+- Task studio includes list, Kanban, and timeline views with deterministic priority ordering and schedule blocks.
+- Local productivity helpers cover task prioritisation, schedule generation, review intervals, and measured insights.
 
 ### Milestone 6 — Optional intelligence
 
 - Provider-independent AI settings surface with local/compatible backend choices.
 - Natural-language prompts can create local tasks without requiring an AI provider.
+- Deterministic local assistant suggestions provide task insights and schedule recommendations before any provider is configured.
 - No API keys are shipped in frontend code and core functionality remains independent of AI.
 
 ### Milestone 7 — Ecosystem boundaries
 
 - Gamification XP and achievement surface with wellbeing-safe, non-punitive progress.
-- Collaboration, calendar providers, music providers, and desktop integrations are represented as explicit future adapter boundaries rather than fake integrations.
+- Ecosystem workspace includes a local body-doubling room model, focus profiles, plugin readiness indicators, and explicit sync/provider boundaries.
+- Collaboration, calendar providers, music providers, and desktop integrations remain explicit future adapter boundaries rather than fake integrations.
 
 ### Milestone 8 — Privacy and release quality
 
@@ -63,4 +66,4 @@
 
 ## Next milestone
 
-Extract domain modules and storage adapters, then add IndexedDB migrations, browser notifications, and optional sync without coupling those concerns to the app shell.
+Production hardening remains: broaden end-to-end workflow coverage, remove render-time Date purity warnings, add PWA/offline installation polish, and document adapter contracts for real cloud, desktop, and collaboration providers.
