@@ -57,11 +57,17 @@
 - IndexedDB-first persistence adapter with localStorage/memory fallback.
 - Explicit notification service and opt-in browser permission flow.
 - Local/offline sync adapter status boundary without data transmission.
+- Generated ambient soundscapes using Web Audio API with persisted preset, volume, and start/stop state.
+- Editable focus profiles with locally persisted blocked website lists and active profile selection.
+- Local body-doubling room state with join/leave, simulated participant presence, elapsed duration, and persistence.
+- Typed integration registry with local enable/disable settings and explicit adapter status labels.
+- AI provider status now distinguishes the deterministic local fallback from unimplemented remote adapters.
 
 ## Known limitations
 
 - Browser notifications, native desktop packaging, cloud synchronization, conflict resolution, encrypted accounts, and OAuth provider integrations still require backend/desktop adapters.
-- Ambient audio currently provides controls and scene persistence; legally distributable audio assets need to be supplied or hosted before playback can be enabled.
+- Ambient audio is generated locally by Web Audio API; it is not a music service and does not provide licensed tracks.
+- Collaboration, OAuth, cloud sync, remote AI, native OS blocking, and browser extension permissions remain boundaries and are not represented as connected.
 - Charts use the measured session history where labeled; the compact overview pulse bars remain decorative context.
 
 ## Next milestone
